@@ -1,17 +1,34 @@
 package Modelo;
 
+import Modelo.PerfilesFactory.BasicaFactory;
+import Modelo.PerfilesFactory.BlackFactory;
+import Modelo.PerfilesFactory.ChambaFactory;
+import Modelo.PerfilesFactory.EstudianteFactory;
+import Modelo.PerfilesFactory.FamiliarFactory;
+import Modelo.PerfilesFactory.GoldenFactory;
+import Modelo.PerfilesFactory.HuesitoFactory;
+import Modelo.Usuario.InformacionUsuario;
 import Modelo.Usuario.Usuario;
 
-public abstract class UsuarioFactory {
-    public abstract Usuario createUsuario();
+public interface UsuarioFactory {
+    Usuario createUsuario(String nombre, InformacionUsuario infoUsuario);
 
-    // Método abstracto para crear una instancia de UsuarioFactory
-    public static UsuarioFactory createFactory(String tipoUsuario) {
-        // Aquí puedes implementar la lógica para devolver la fábrica adecuada según el tipo de usuario
+    static UsuarioFactory createFactory(String tipoUsuario) {
         if (tipoUsuario.equals("Estudiante")) {
-            return EstudianteFactory.createFactory();
+            return new EstudianteFactory();
+        } else if (tipoUsuario.equals("Basica")) {
+            return new BasicaFactory();
+        } else if (tipoUsuario.equals("Black")) {
+            return new BlackFactory();
+        } else if (tipoUsuario.equals("Golden")) {
+            return new GoldenFactory();
+        } else if (tipoUsuario.equals("Familiar")) {
+            return new FamiliarFactory();
+        } else if (tipoUsuario.equals("Huesito")) {
+            return new HuesitoFactory();
+        } else if (tipoUsuario.equals("Chamba")) {
+            return new ChambaFactory();
         }
-        // Agrega más casos según sea necesario para otros tipos de usuario
         return null;
     }
 }

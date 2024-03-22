@@ -1,8 +1,9 @@
 package Modelo;
 
+import Modelo.Usuario.Usuario;
+
 import java.util.ArrayList;
 import java.util.List;
-import Modelo.Usuario.Usuario;
 
 public class UserManager {
     private static UserManager instance;
@@ -39,5 +40,4 @@ public class UserManager {
     public List<Usuario> obtenerTodosLosUsuarios() {
         return usuarios;
     }
-
 }

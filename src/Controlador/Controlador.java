@@ -1,12 +1,15 @@
 package Controlador;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Predicate;
+import Modelo.Usuario.InformacionUsuario;
 import Modelo.UserManager;
 import Modelo.UsuarioFactory;
 import Modelo.Usuario.Usuario;
 import Vista.Vista;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
 
 public class Controlador {
     private Vista vista;
@@ -17,25 +20,29 @@ public class Controlador {
         this.userManager = UserManager.getInstance();
     }
 
-    public String obtenerTipoUsuario(String nombre, int edad, double ingresoMensual, int familiaresQueGananDinero, boolean tieneEmprendimiento, double cantidadInversion) {
-        // Determinar el tipo de usuario según los requisitos
-        return determinarTipoUsuario(edad, ingresoMensual, familiaresQueGananDinero, tieneEmprendimiento, cantidadInversion);
+    public Map<String, Predicate<Usuario>> obtenerTipoUsuario(InformacionUsuario infoUsuario) {
+        return determinarTipoUsuario(infoUsuario.getEdad(), infoUsuario.getIngresoMensual(), infoUsuario.getFamiliaresQueGananDinero(), infoUsuario.isTieneEmprendimiento(), infoUsuario.getCantidadInversion());
     }
 
-    public void crearUsuario(String tipoUsuario, String nombre) {
+    public void crearUsuario(String tipoUsuario, String nombre, InformacionUsuario infoUsuario) {
+    Map<String, Predicate<Usuario>> requisitosMap = obtenerTipoUsuario(infoUsuario);
+    Predicate<Usuario> requisitos = requisitosMap.get(tipoUsuario);
+    
+    if (requisitos != null && requisitos.test(new Usuario("Dummy", tipoUsuario, infoUsuario.getIngresoMensual(), infoUsuario.getEdad()))) {
         UsuarioFactory factory = UsuarioFactory.createFactory(tipoUsuario);
         if (factory != null) {
-            Usuario nuevoUsuario = factory.createUsuario();
+            Usuario nuevoUsuario = factory.createUsuario(nombre, infoUsuario);
             userManager.agregarUsuario(nuevoUsuario);
             vista.mostrarMensaje("Usuario creado exitosamente: " + nuevoUsuario.getNombre() + " - Plan: " + tipoUsuario);
         } else {
             vista.mostrarMensaje("Tipo de usuario no válido: " + tipoUsuario);
         }
+    } else {
+        vista.mostrarMensaje("El usuario no cumple con los requisitos del plan: " + tipoUsuario);
     }
+}
 
-    // Método para determinar el tipo de usuario según los requisitos utilizando HashMap
-    private String determinarTipoUsuario(int edad, double ingresoMensual, int familiaresQueGananDinero, boolean tieneEmprendimiento, double cantidadInversion) {
-        // Crear un mapa de requisitos para cada tipo de usuario
+    private Map<String, Predicate<Usuario>> determinarTipoUsuario(int edad, double ingresoMensual, int familiaresQueGananDinero, boolean tieneEmprendimiento, double cantidadInversion) {
         Map<String, Predicate<Usuario>> requisitosMap = new HashMap<>();
         requisitosMap.put("Estudiante", usuario -> usuario.getPerfil().equals("Estudiante"));
         requisitosMap.put("Basica", usuario -> ingresoMensual >= 1000000 && ingresoMensual < 2000000);
@@ -44,16 +51,27 @@ public class Controlador {
         requisitosMap.put("Familiar", usuario -> familiaresQueGananDinero >= 2);
         requisitosMap.put("Huesito", usuario -> usuario.getEdad() >= 65);
         requisitosMap.put("Chamba", usuario -> tieneEmprendimiento);
+    
+        // Agregar lógica para los nuevos tipos de usuario aquí
+    
+        return requisitosMap;
+    }
 
-        // Iterar sobre el mapa y verificar si se cumplen los requisitos para cada tipo de usuario
+    public String[] obtenerPerfiles(InformacionUsuario infoUsuario) {
+        Set<String> perfilesSet = new HashSet<>();
+        // Obtener el mapa de requisitos directamente del método determinarTipoUsuario
+        Map<String, Predicate<Usuario>> requisitosMap = determinarTipoUsuario(infoUsuario.getEdad(), infoUsuario.getIngresoMensual(), infoUsuario.getFamiliaresQueGananDinero(), infoUsuario.isTieneEmprendimiento(), infoUsuario.getCantidadInversion());
+    
         for (Map.Entry<String, Predicate<Usuario>> entry : requisitosMap.entrySet()) {
             String tipoUsuario = entry.getKey();
             Predicate<Usuario> requisitos = entry.getValue();
-            if (requisitos.test(new Usuario("Dummy", tipoUsuario, ingresoMensual, edad))) {
-                return tipoUsuario;
+            if (requisitos.test(new Usuario("Dummy", tipoUsuario, infoUsuario.getIngresoMensual(), infoUsuario.getEdad()))) {
+                perfilesSet.add(tipoUsuario);
             }
         }
-
-        return null;
+        return perfilesSet.toArray(new String[0]);
+    }
+    public void setVista(Vista vista) {
+        this.vista = vista;
     }
 }
